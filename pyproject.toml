@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyabs"
+version = "0.0.1"
+description = "Airbag bunch stability models for accelerator beam-dynamics calculations."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Cristhian Gonzalez-Ortiz" },
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+  "jupyter",
+]
+jax = [
+  "jax",
+  "jaxlib",
+]
+cupy = [
+  "cupy",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,33 @@
+# Data/outputs
+*.pkl
+*.h5
+
+# Mac
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# VSCode
+.vscode/
+
+# Codex
+.codex/
+AGENTS.md
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python envs
+.env
+.venv
+env/
+venv/
+
+# Logs
+*.log
+
+# Egg info
+*.egg-info/
