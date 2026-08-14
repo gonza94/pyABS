@@ -29,20 +29,20 @@ class WakeConfig:
 
 def theta_wake_scalar(m: int, n: int) -> float:
     
-    if (m==0 and n == 0) and (m == n):
+    if (m==n) and (m!=0):
         return 0.0
 
-    if m==0 and n == 0:
+    if m==0 and n==0:
         return 0.5
 
-    if n == -m and m != 0:
+    if n==-m and m!=0:
         return 0.0
 
-    if n == 0:
-        return (-1 + (-1)**m)/(m**2 * (np.pi)**2)
+    if n==0 and m!=0:
+        return -(1 - (-1)**m)/((np.pi*m)**2)
 
     #if n != m and (m =! np.abs(n)):
-    return -1 + (-1)**(m+n)/((np.pi)**2)*(m**2 - n**2)
+    return (1/(2*n*(np.pi**2)))*((1-(-1)**(m+n)/(m+n) + (1-(-1)**(n-m))/(n-m)))   #-1 + (-1)**(m+n)/((np.pi)**2)*(m**2 - n**2)
 
 def wake_scalar(kind: WakeKind, m: int, n: int):
     if kind == "theta":

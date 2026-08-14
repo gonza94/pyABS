@@ -57,4 +57,4 @@ def build_abs_matrix_parts(basis: Any,
         U = build_wake_matrix(basis=basis, model=wake_model, scale=scale)
 
 
-    return ABSMatrixParts(fourier=A, wake=U, operator= (-1j)*(A - (q/2)*I + (q/2)*P + U))
+    return ABSMatrixParts(fourier=A, wake=U, operator= (-1j)*(A - (q/2)*I + (q/2)*P + U)) #operator = (-1j)*(the rest sometimes)
