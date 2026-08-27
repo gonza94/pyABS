@@ -11,6 +11,7 @@ from pyabs.core.basis import free_fourier_matrix
 from pyabs.core.wake import (WakeScale, ThetaWake, build_wake_matrix)
 
 Array = Any
+WakeModel = ThetaWake
 
 @dataclass
 class ABSMatrixParts:
@@ -56,5 +57,4 @@ def build_abs_matrix_parts(basis: Any,
             raise ValueError("Scale error")
         U = build_wake_matrix(basis=basis, model=wake_model, scale=scale)
 
-
-    return ABSMatrixParts(fourier=A, wake=U, operator= (-1j)*(A - (q/2)*I + (q/2)*P + U)) #operator = (-1j)*(the rest sometimes)
+    return ABSMatrixParts(fourier=A, wake=U, operator= (A - (q/2)*I + (q/2)*P - U)) #operator = (-1j)*(the rest sometimes)
