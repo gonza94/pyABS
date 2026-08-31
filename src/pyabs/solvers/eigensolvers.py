@@ -5,7 +5,7 @@ import numpy as np
 from dataclasses import dataclass
 #from pyabs.core.basis import ABSBasis, update_q
 from pyabs.core.matrix import build_abs_matrix, WakeModel
-from pyabs.core.wake import ThetaWake, WakeScale
+from pyabs.core.wake import ThetaWake, WakeScale, ResistiveWallWake
 
 Array = Any
 
@@ -169,8 +169,8 @@ def scan_over_w(basis: Any, wrange: Array, *,
                 determine_threshold=False) -> WakeScanResult:
     result = np.empty((wrange.shape[0], basis.n_modes), dtype=complex)
     for i, w in enumerate(wrange):
-        theta_wake= ThetaWake(W0=w)
-        matrix = build_abs_matrix(basis, wake_model=theta_wake, scale=w)
+        rw_wake= ResistiveWallWake(RW=w)
+        matrix = build_abs_matrix(basis, wake_model=rw_wake, scale=w)
         result[i] = np.array(solve_eigenvalues(matrix))
 
     eigenscan = sort_by_continuity(result)

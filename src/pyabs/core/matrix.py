@@ -8,10 +8,10 @@ from typing import Any
 from dataclasses import dataclass
 
 from pyabs.core.basis import free_fourier_matrix
-from pyabs.core.wake import (WakeScale, ThetaWake, build_wake_matrix)
+from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, build_wake_matrix)
 
 Array = Any
-WakeModel = ThetaWake
+WakeModel = ResistiveWallWake
 
 @dataclass
 class ABSMatrixParts:
