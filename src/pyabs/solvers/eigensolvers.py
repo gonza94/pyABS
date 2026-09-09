@@ -37,7 +37,7 @@ class WakeScanResult:
                         print(f"Modes {upper} and {lower} couple at wth = {w}")
                     return w
                     continue
-            self.threshold=0
+        self.threshold=-1
 
 
 
