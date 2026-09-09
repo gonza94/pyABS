@@ -17,7 +17,7 @@ import numpy as np
 from scipy.special import fresnel
 
 Array = Any
-WakeKind = Literal["theta", "resistive-wall"]
+WakeKind = Literal["theta", "resistive-wall", "sine"]
 
 @dataclass
 class WakeConfig:
@@ -46,12 +46,17 @@ def rw_wake_scalar(n: int, m: int) -> float:
     if n**2 != m**2:
         return (((-1)**(n+m))*np.sqrt(2*np.abs(m))*fresnel(np.sqrt(2*np.abs(m)))[0] - np.sqrt(2*np.abs(n))*fresnel(np.sqrt(2*np.abs(n)))[0])/(np.pi*(n**2 - m**2))
 
+def sine_wake_scalar(n: int, m: int, omega=float) -> float:
+    return 0.0
+
 
 def wake_scalar(kind: WakeKind, n: int, m: int):
     if kind == "theta":
         return theta_wake_scalar(n, m)
     if kind == "resistive-wall":
         return rw_wake_scalar(n, m)
+    if kind == "sine":
+        return sine_wake_scalar(n, m, omega)
 
     raise ValueError(f"Unknown wake: {kind}")
 

@@ -17,7 +17,7 @@ from pyabs.core.kernels import(WakeConfig, build_arbwake_matrix)
 
 Array = Any
 
-WakeKind = Literal["theta", "resisitve-wall"]
+WakeKind = Literal["theta", "resisitve-wall", "sine"]
 
 @dataclass
 class WakeScale:
@@ -27,23 +27,32 @@ class WakeScale:
 class ThetaWake:
     W0: float
 
+def build_theta_wake_matrix(basis: Any, model: ThetaWake, scale: WakeScale)->np.ndarray:
+    U_nm = build_arbwake_matrix(basis=basis, config=WakeConfig(kind="theta"))
+    return model.W0*scale.w*U_nm
+
 @dataclass
 class ResistiveWallWake:
     RW: float
 
-def build_theta_wake_matrix(basis: Any, model: ThetaWake, scale: WakeScale)->np.ndarray:
-    U_nm = build_arbwake_matrix(basis=basis, config=WakeConfig(kind="theta"))
-    return model.W0 * U_nm
-
 def build_rw_wake_matrix(basis: Any, model: ResistiveWallWake, scale: WakeScale)->np.ndarray:
     U_nm = build_arbwake_matrix(basis=basis, config=WakeConfig(kind="resistive-wall"))
-    return model.RW * U_nm
+    return model.RW*scale.w*U_nm
 
+@dataclass
+class SineWake:
+    A: float
+    omega: float
 
-def build_wake_matrix(basis: Any, model: ThetaWake, scale: WakeScale)->np.ndarray:
+def build_sine_wake_matrix(basis: Any, model: SineWake, scale: WakeScale)->np.ndarray:
+    U_nm = build_arbwake_matrix(basis=basis, config=WakeConfig(kind="sine"))
+
+def build_wake_matrix(basis: Any, model: Any, scale: WakeScale)->np.ndarray:
     if isinstance(model, ThetaWake):
         return build_theta_wake_matrix(basis=basis, model=model, scale=scale)
     if isinstance(model, ResistiveWallWake):
         return build_rw_wake_matrix(basis=basis, model=model, scale=scale)
+    if isinstance(model, SineWake):
+        return build_sine_wake_matrix(basis=basis, model=model, scale=scale)
 
     raise TypeError(f"Unsupported wake model: {type(model)!r}")

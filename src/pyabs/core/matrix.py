@@ -8,7 +8,7 @@ from typing import Any
 from dataclasses import dataclass
 
 from pyabs.core.basis import free_fourier_matrix
-from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, build_wake_matrix)
+from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, SineWake, build_wake_matrix)
 
 Array = Any
 WakeModel = ResistiveWallWake
