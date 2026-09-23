@@ -53,21 +53,25 @@ class Solution:
             return ks[mode+self.n_max]
         return ks, modes
 
-    def compute_xlcentroid(self, theta: float, psi: float):
+    def compute_xlcentroid(self, theta: float, psi: float, *, mode: int = None):
         nvec = np.arange(-self.n_max, self.n_max+1, dtype=int)
         cos_basis = lambda psi: np.cos(nvec*psi)
-        return np.dot(cos_basis(psi), self.an(theta))
+        xlcent = np.dot(cos_basis(psi), self.an(theta))
+        if mode is not None:
+            return xlcent[mode+self.n_max]
+        return xlcent
 
     def compute_centroidstrobe(self, psi: float, *, ns: int=20, modes: Array = None):
-        result = np.empty((self.n_modes, ns))
         if modes is not None:
-            n_max = int((len(modes)-1)/2)
+            modes = modes
+            result = np.empty((len(modes), ns))
         else:
             n_max = self.n_max
             modes = np.arange(-n_max, n_max+1, dtype=int)
+            result = np.empty((self.n_modes, ns))
         for i, mode in enumerate(modes):
             for j in range(ns):
-                val = self.compute_xlcentroid(theta=0.0, psi=psi)[mode+n_max]*np.exp(-2*1j*np.pi*j/ns)
+                val = self.compute_xlcentroid(theta=0.0, psi=psi, mode=int(mode))*np.exp(-2*1j*np.pi*j/ns)
                 result[i][j] = np.real(val)
         return result
 

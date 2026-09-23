@@ -8,7 +8,8 @@ from typing import Any
 from dataclasses import dataclass
 
 from pyabs.core.basis import free_fourier_matrix
-from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, SineWake, build_wake_matrix)
+from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, SineWake, ExpWake, build_wake_matrix)
+from pyabs.core.chromaticity import (ChromaticScale, build_chromaticity_matrix)
 
 Array = Any
 WakeModel = ResistiveWallWake
@@ -24,6 +25,7 @@ class ABSMatrixParts:
     """
     fourier: np.ndarray
     wake: np.ndarray
+    chromaticity: np.ndarray
     operator: np.ndarray
 
 
@@ -38,18 +40,21 @@ def build_fourier_operator(basis: Any) -> np.ndarray:
 def build_abs_matrix(basis: Any,
                      *,
                      wake_model: WakeModel | None=None,
-                     scale: WakeScale | None=None) -> np.ndarray:
-    parts = build_abs_matrix_parts(basis, wake_model=wake_model, scale=scale)
+                     scale: WakeScale | None=None,
+                     xi: ChromaticScale | None=None) -> np.ndarray:
+    parts = build_abs_matrix_parts(basis, wake_model=wake_model, scale=scale, xi=xi)
     return parts.operator
 
 def build_abs_matrix_parts(basis: Any,
                            *,
                            wake_model: WakeModel | None=None,
-                           scale: WakeScale | None=None) -> ABSMatrixParts:
+                           scale: WakeScale | None=None,
+                           xi: ChromaticScale) -> ABSMatrixParts:
     A = build_fourier_operator(basis)
     I = np.eye(basis.n_modes, dtype = complex)
     P = np.fliplr(I)
     U = np.zeros_like(A, dtype=complex)
+    Xi = np.zeros_like(A, dtype=complex)
     q=basis.q
 
     if wake_model is not None:
@@ -57,4 +62,7 @@ def build_abs_matrix_parts(basis: Any,
             raise ValueError("Scale error")
         U = build_wake_matrix(basis=basis, model=wake_model, scale=scale)
 
-    return ABSMatrixParts(fourier=A, wake=U, operator= (A - (q/2)*I + (q/2)*P - U)) #operator = (-1j)*(the rest sometimes)
+    if xi is not None:
+        Xi = build_chromaticity_matrix(basis=basis,scale=xi)
+
+    return ABSMatrixParts(fourier=A, wake=U, chromaticity=Xi, operator= (A - (q/2)*I + (q/2)*P - U - Xi)) #operator = (-1j)*(the rest sometimes)

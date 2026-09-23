@@ -13,11 +13,11 @@ from typing import Any, Literal
 
 import numpy as np
 
-from pyabs.core.kernels import(WakeConfig, build_arbwake_matrix)
+from pyabs.core.kernels import(WakeConfig, build_arbwake_matrix, build_twoparam_wake_matrix)
 
 Array = Any
 
-WakeKind = Literal["theta", "resisitve-wall", "sine"]
+WakeKind = Literal["theta", "resisitve-wall", "sine", "exponential"]
 
 @dataclass
 class WakeScale:
@@ -45,7 +45,17 @@ class SineWake:
     omega: float
 
 def build_sine_wake_matrix(basis: Any, model: SineWake, scale: WakeScale)->np.ndarray:
-    U_nm = build_arbwake_matrix(basis=basis, config=WakeConfig(kind="sine"))
+    U_nm = build_twoparam_wake_matrix(basis=basis, config=WakeConfig(kind="sine"), param=model.omega)
+    return model.A*scale.w*U_nm
+
+@dataclass
+class ExpWake:
+    A: float
+    alpha: float
+
+def build_exp_wake_matrix(basis: Any, model: ExpWake, scale: WakeScale)->np.ndarray:
+    U_nm = build_twoparam_wake_matrix(basis=basis, config=WakeConfig(kind="exponential"), param=model.alpha)
+    return model.A*scale.w*U_nm
 
 def build_wake_matrix(basis: Any, model: Any, scale: WakeScale)->np.ndarray:
     if isinstance(model, ThetaWake):
@@ -54,5 +64,7 @@ def build_wake_matrix(basis: Any, model: Any, scale: WakeScale)->np.ndarray:
         return build_rw_wake_matrix(basis=basis, model=model, scale=scale)
     if isinstance(model, SineWake):
         return build_sine_wake_matrix(basis=basis, model=model, scale=scale)
+    if isinstance(model, ExpWake):
+        return build_exp_wake_matrix(basis=basis, model=model, scale=scale)
 
     raise TypeError(f"Unsupported wake model: {type(model)!r}")

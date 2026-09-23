@@ -24,18 +24,42 @@ class WakeScanResult:
     wake_parameters: np.array
     eigenvalues: np.ndarray
     threshold: float | None = None
+    coupled: tuple | None = None
 
     def determine_threshold(self, *, verbose=False):
         eigs = self.eigenvalues
         for i, w in enumerate(self.wake_parameters):
+            eigs_i = eigs[i]
+            for j in range(len(eigs[0])):
+                for k in range(len(eigs[0])):
+                    if (k == j):
+                        continue
+                    if((np.abs(eigs_i[j].real - eigs_i[k].real) < 1e-8) and (np.abs(eigs_i[j].imag) + np.abs(eigs_i[k].imag) > 1e-8)):
+                       self.threshold = w
+                       n_max = int((len(eigs_i)-1)/2)
+                       modeupper = k - n_max
+                       modelower = j - n_max
+                       self.coupled = (modelower, modeupper)
+                       if verbose:
+                           print(f"Modes {modeupper} and {modelower} couple at wth = {w}")
+                       return w, self.coupled
+                       continue
+        self.threshold = -1
+
+
+    def old_determine_threshold(self, *, verbose=False):
+        eigs = self.eigenvalues
+        for i, w in enumerate(self.wake_parameters):
             for j in range(len(eigs[0])-1):
-                if((np.abs(eigs[i][j+1].real - eigs[i][j].real) < 1e-8)):
+                if((np.abs(eigs[i][j+1].real - eigs[i][j].real) < 1e-8) and (np.abs(eigs[i][j+1].imag) + np.abs(eigs[i][j].imag) > 1e-8)):
                     self.threshold = w
+                    coupled = (int(eigs[0][j+1].real),int(eigs[0][j].real))
+                    self.coupled = coupled
                     if(verbose):
-                        upper = int(eigs[0][j+1].real)
-                        lower = int(eigs[0][j].real)
+                        upper = coupled[0]#int(eigs[0][j+1].real)
+                        lower = coupled[1]#int(eigs[0][j].real)
                         print(f"Modes {upper} and {lower} couple at wth = {w}")
-                    return w
+                    return w, coupled
                     continue
         self.threshold=-1
 
@@ -88,8 +112,8 @@ def scan_over_w(basis: Any, wrange: Array, *,
     result = WakeScanResult(wake_parameters=wrange, eigenvalues=eigenscan)
 
     if determine_threshold:
-        wth = result.determine_threshold(verbose = True)
-        return WakeScanResult(wake_parameters=wrange, eigenvalues=eigenscan, threshold=wth)
+        wth, coupled = result.determine_threshold(verbose = True)
+        return WakeScanResult(wake_parameters=wrange, eigenvalues=eigenscan, threshold=wth, coupled=coupled)
     return result
 
 
