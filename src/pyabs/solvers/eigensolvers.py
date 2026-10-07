@@ -4,7 +4,8 @@ from typing import Any
 import numpy as np
 from dataclasses import dataclass
 from pyabs.core.matrix import build_abs_matrix, WakeModel
-from pyabs.core.wake import ThetaWake, WakeScale, ResistiveWallWake
+from pyabs.core.wake import ThetaWake, WakeScale, ResistiveWallWake, SineWake, ExpWake
+from pyabs.core.chromaticity import ChromaticScale
 
 Array = Any
 
@@ -44,7 +45,7 @@ class WakeScanResult:
                            print(f"Modes {modeupper} and {modelower} couple at wth = {w}")
                        return w, self.coupled
                        continue
-        self.threshold = -1
+        return -1, (-1,-1)
 
 
     def old_determine_threshold(self, *, verbose=False):
@@ -102,10 +103,14 @@ def solve_eigensystem(matrix: Array, *, vectors: bool=True) -> EigenSolution:
 
 def scan_over_w(basis: Any, wrange: Array, *, 
                 determine_threshold=False,
-                wake_model: WakeModel| None = None) -> WakeScanResult:
+                wake_model: WakeModel| None = None,
+                xi: ChromaticScale | None=None) -> WakeScanResult:
     result = np.empty((wrange.shape[0], basis.n_modes), dtype=complex)
     for i, w in enumerate(wrange):
-        matrix = build_abs_matrix(basis, wake_model=wake_model, scale=WakeScale(w=w))
+        if xi is not None:
+            matrix = build_abs_matrix(basis, wake_model=wake_model, scale=WakeScale(w=w), xi=ChromaticScale(xi=xi))
+        else:
+            matrix = build_abs_matrix(basis,wake_model=wake_model,scale=WakeScale(w=w))
         result[i] = np.array(solve_eigenvalues(matrix))
 
     eigenscan = sort_by_continuity(result)

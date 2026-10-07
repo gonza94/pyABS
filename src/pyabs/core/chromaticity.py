@@ -33,4 +33,4 @@ def build_chromaticity_matrix(basis: Any, scale: ChromaticScale)->np.ndarray:
             m = int(basis_n[j])
             Xi_nm[i][j] = chrom_scalar(n, m)
 
-    return Xi_nm
+    return scale.xi*Xi_nm
