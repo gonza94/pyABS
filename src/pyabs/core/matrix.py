@@ -3,9 +3,10 @@ TO DO:
     Add Chromaticity
 """
 
-import numpy as np
+#import numpy as np
 from typing import Any
 from dataclasses import dataclass
+from pyabs.core.backend import xp
 
 from pyabs.core.basis import free_fourier_matrix
 from pyabs.core.wake import (WakeScale, ThetaWake, ResistiveWallWake, SineWake, ExpWake, build_wake_matrix)
@@ -23,17 +24,17 @@ class ABSMatrixParts:
     Adot = -iH*A
     H = -i[(n - q/2)*KroneckerDelta_nm + (q/2)*KroneckerDelta_(-n)m]
     """
-    fourier: np.ndarray
-    wake: np.ndarray
-    chromaticity: np.ndarray
-    operator: np.ndarray
+    fourier: Array
+    wake: Array
+    chromaticity: Array
+    operator: Array
 
 
-def build_fourier_operator(basis: Any) -> np.ndarray:
+def build_fourier_operator(basis: Any) -> Array:
     """
     the no-wake fourier operator
     """
-    return np.asarray(free_fourier_matrix(np, basis, dtype=complex))
+    return xp.asarray(free_fourier_matrix(xp, basis, dtype=complex))
     
 
 
@@ -51,10 +52,10 @@ def build_abs_matrix_parts(basis: Any,
                            scale: WakeScale | None=None,
                            xi: ChromaticScale) -> ABSMatrixParts:
     A = build_fourier_operator(basis)
-    I = np.eye(basis.n_modes, dtype = complex)
-    P = np.fliplr(I)
-    U = np.zeros_like(A, dtype=complex)
-    Xi = np.zeros_like(A, dtype=complex)
+    I = xp.eye(basis.n_modes, dtype = complex)
+    P = xp.fliplr(I)
+    U = xp.zeros_like(A, dtype=complex)
+    Xi =xp.zeros_like(A, dtype=complex)
     q=basis.q
 
     if wake_model is not None:

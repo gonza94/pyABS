@@ -1,8 +1,9 @@
-# src/pynht/core/basis.py
+# src/pyabs/core/basis.py
 
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
+from pyabs.core.backend import xp as _xp, set_backend
 
 ArrayModule = Any
 Array = Any
@@ -47,6 +48,7 @@ def make_n_values(xp: ArrayModule, n_max: int) -> Array:
     return xp.arange(-n_max, n_max+1, dtype = int)
 
 def build_abs_basis(xp: ArrayModule, config: ABSBasisConfig) -> ABSBasis:
+    set_backend(xp)
     n_values = make_n_values(xp=xp, n_max=config.n_max)
     n = n_values.reshape(-1)
     q = config.q

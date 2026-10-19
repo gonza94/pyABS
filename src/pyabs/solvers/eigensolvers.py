@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from typing import Any
-import numpy as np
+#import numpy as np
+from pyabs.core.backend import xp
 from dataclasses import dataclass
 from pyabs.core.matrix import build_abs_matrix, WakeModel
 from pyabs.core.wake import ThetaWake, WakeScale, ResistiveWallWake, SineWake, ExpWake
@@ -11,19 +12,19 @@ Array = Any
 
 @dataclass
 class EigenSolution:
-    eigenvalues: np.ndarray
-    eigenvectors: np.ndarray | None = None
+    eigenvalues: Array
+    eigenvectors: Array | None = None
 
 '''
 @dataclass
 class SpaceChargeScanResult:
-    sc_parameters: np.array
-    eigenvalues: np.ndarray
+    sc_parameters: Array
+    eigenvalues: Array
 '''
 @dataclass
 class WakeScanResult:
-    wake_parameters: np.array
-    eigenvalues: np.ndarray
+    wake_parameters: Array
+    eigenvalues: Array
     threshold: float | None = None
     coupled: tuple | None = None
 
@@ -35,7 +36,7 @@ class WakeScanResult:
                 for k in range(len(eigs[0])):
                     if (k == j):
                         continue
-                    if((np.abs(eigs_i[j].real - eigs_i[k].real) < 1e-8) and (np.abs(eigs_i[j].imag) + np.abs(eigs_i[k].imag) > 1e-8)):
+                    if((xp.abs(eigs_i[j].real - eigs_i[k].real) < 1e-8) and (xp.abs(eigs_i[j].imag) + xp.abs(eigs_i[k].imag) > 1e-8)):
                        self.threshold = w
                        n_max = int((len(eigs_i)-1)/2)
                        modeupper = k - n_max
@@ -52,7 +53,7 @@ class WakeScanResult:
         eigs = self.eigenvalues
         for i, w in enumerate(self.wake_parameters):
             for j in range(len(eigs[0])-1):
-                if((np.abs(eigs[i][j+1].real - eigs[i][j].real) < 1e-8) and (np.abs(eigs[i][j+1].imag) + np.abs(eigs[i][j].imag) > 1e-8)):
+                if((xp.abs(eigs[i][j+1].real - eigs[i][j].real) < 1e-8) and (xp.abs(eigs[i][j+1].imag) + xp.abs(eigs[i][j].imag) > 1e-8)):
                     self.threshold = w
                     coupled = (int(eigs[0][j+1].real),int(eigs[0][j].real))
                     self.coupled = coupled
@@ -67,8 +68,8 @@ class WakeScanResult:
 
 
 
-def validate_square_matrix(matrix:Array) -> np.ndarray:
-    matrix = np.asarray(matrix, dtype=complex)
+def validate_square_matrix(matrix:Array) -> Array:
+    matrix = xp.asarray(matrix, dtype=complex)
 
     if matrix.ndim != 2:
         raise ValueError("Matrix must be 2D.")
@@ -79,9 +80,9 @@ def validate_square_matrix(matrix:Array) -> np.ndarray:
     return matrix
 
 
-def solve_eigenvalues(matrix: Array) -> np.ndarray:
+def solve_eigenvalues(matrix: Array) -> Array:
     matrix = validate_square_matrix(matrix)
-    return np.linalg.eigvals(matrix)
+    return xp.linalg.eigvals(matrix)
 
 
 #return sorted eigensystem
@@ -89,14 +90,14 @@ def solve_eigensystem(matrix: Array, *, vectors: bool=True) -> EigenSolution:
     matrix = validate_square_matrix(matrix)
 
     if vectors:
-        eigenvalues, eigenvectors = np.linalg.eig(matrix)
-        sindx = np.argsort(eigenvalues)
+        eigenvalues, eigenvectors = xp.linalg.eig(matrix)
+        sindx = xp.argsort(eigenvalues)
         eigenvalues, eigenvectors = eigenvalues[sindx], eigenvectors[:,sindx]
         return EigenSolution(eigenvalues=eigenvalues,
                              eigenvectors=eigenvectors,)
 
-    eigenvalues = np.linalg.eigvals(matrix)
-    sindx = np.argsort(eigenvalues)
+    eigenvalues = xp.linalg.eigvals(matrix)
+    sindx = xp.argsort(eigenvalues)
     eigenvalues = eigenvalues[sindx]
     return EigenSolution(eigenvalues=eigenvalues,
                          eigenvectors=None,)
@@ -105,13 +106,13 @@ def scan_over_w(basis: Any, wrange: Array, *,
                 determine_threshold=False,
                 wake_model: WakeModel| None = None,
                 xi: ChromaticScale | None=None) -> WakeScanResult:
-    result = np.empty((wrange.shape[0], basis.n_modes), dtype=complex)
+    result = xp.empty((wrange.shape[0], basis.n_modes), dtype=complex)
     for i, w in enumerate(wrange):
         if xi is not None:
-            matrix = build_abs_matrix(basis, wake_model=wake_model, scale=WakeScale(w=w), xi=ChromaticScale(xi=xi))
+            matrix = build_abs_matrix(basis, wake_model=wake_model, scale=WakeScale(w=w), xi=xi)
         else:
             matrix = build_abs_matrix(basis,wake_model=wake_model,scale=WakeScale(w=w))
-        result[i] = np.array(solve_eigenvalues(matrix))
+        result[i] = Array(solve_eigenvalues(matrix))
 
     eigenscan = sort_by_continuity(result)
     result = WakeScanResult(wake_parameters=wrange, eigenvalues=eigenscan)
@@ -127,11 +128,11 @@ def scan_over_w(basis: Any, wrange: Array, *,
 def scan_over_q(basis: Any, qrange: Array,*, 
                 wake_model: WakeModel | None = None, 
                 scale: WakeScale | None = None) -> SpaceChargeScanResult:
-    result=np.empty((qrange.shape[0], basis.n_modes), dtype=complex)
+    result=xp.empty((qrange.shape[0], basis.n_modes), dtype=complex)
     for i, q in enumerate(qrange):
         update_q(basis, newq=q)
         matrix = build_abs_matrix(basis, wake_model=wake_model, scale=scale)
-        result[i] = np.array(solve_eigenvalues(matrix))
+        result[i] = Array(solve_eigenvalues(matrix))
     eigenscan = sort_by_continuity(result)
 
     return SpaceChargeScanResult(sc_parameters=qrange, eigenvalues=eigenscan)
@@ -146,12 +147,12 @@ def sort_by_continuity(eigenscan):
         prev = sorted_scan[i - 1]
         curr = sorted_scan[i].copy()
         used = set()
-        new_order = np.zeros(n_modes, dtype=int)
+        new_order = xp.zeros(n_modes, dtype=int)
         for j in range(n_modes):
             # find the closest unused eigenvalue in curr to prev[j]
-            dists = np.abs(curr - prev[j])
-            dists[list(used)] = np.inf
-            best = np.argmin(dists)
+            dists = xp.abs(curr - prev[j])
+            dists[list(used)] = xp.inf
+            best = xp.argmin(dists)
             new_order[j] = best
             used.add(best)
         sorted_scan[i] = curr[new_order]
